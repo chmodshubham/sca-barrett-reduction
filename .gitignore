@@ -1,0 +1,4 @@
+objdir-*/
+simpleserial-barrett-*.*
+Makefile.platform
+.ipynb_checkpoints/
