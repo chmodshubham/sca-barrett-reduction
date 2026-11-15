@@ -1,37 +1,53 @@
 /*
-    Single-word Barrett reduction target: r = x mod N.
+    Board code for the power test of HQC-1's Barrett reduction.
 
-    'b' + 3 bytes : x, little-endian (24-bit)
-    'r' + 4 bytes : x mod N, little-endian
+    The computer sends 'b' and 3 bytes: the number x (lowest byte first).
+    The board replies 'r' and 4 bytes: x mod PARAM_N (lowest byte first).
+
+    The trigger goes high just before barrett_reduce and low just after it,
+    so the recording starts at the reduction.
 */
 
 #include <stdint.h>
 #include "hal.h"
 #include "simpleserial.h"
 
-#define N 17669               // HQC-1 modulus
-#define MU ((1ULL << 32) / N) // floor(2^32 / N)
+// Copied from HQC v5.1.0, src/ref/hqc-1/parameters.h
+#define PARAM_N 17669
+#define PARAM_N_MU 243079ULL
 
-// volatile keeps the load and store inside the trigger window.
+// Stop the build if PARAM_N_MU does not match PARAM_N.
+_Static_assert(PARAM_N_MU == (1ULL << 32) / PARAM_N, "PARAM_N_MU must be floor(2^32 / PARAM_N)");
+
+/**
+ * @brief Constant-time Barrett reduction modulo PARAM_N.
+ *
+ * Reduces \p x modulo PARAM_N using the precomputed value PARAM_N_MU = ⌊2^32 / PARAM_N⌋.
+ *
+ * @param[in] x Input value to reduce.
+ * @return x mod PARAM_N in constant time.
+ */
+static inline uint32_t barrett_reduce(uint32_t x)
+{
+    uint64_t q = ((uint64_t)x * PARAM_N_MU) >> 32;
+    uint32_t r = x - (uint32_t)(q * PARAM_N);
+
+    uint32_t reduce_flag = (((r - PARAM_N) >> 31) ^ 1);
+    uint32_t mask = -reduce_flag;
+    r -= mask & PARAM_N;
+    return r;
+}
+
+// volatile makes the board read x and write the result while the trigger is high.
 volatile uint32_t x_in;
 volatile uint32_t r_out;
 
 /*
-    Returns x mod N without branches.
-    q is x / N or one too small, so r needs at most one subtraction of N.
+    Runs when the computer sends 'b'. Reads x, runs barrett_reduce with the
+    trigger high, and sends the result back. The trigger marks where the
+    reduction starts and ends.
 */
-uint32_t barrett_reduce(uint32_t x)
-{
-    uint32_t q = ((uint64_t)x * MU) >> 32;
-    uint32_t r = x - q * N;
-
-    uint32_t mask = -(((r - N) >> 31) ^ 1); // all ones if r >= N, else 0
-    r -= mask & N;
-
-    return r;
-}
-
-uint8_t reduce(uint8_t *buf, uint8_t len)
+uint8_t handle_barrett(uint8_t *buf, uint8_t len)
 {
     x_in = buf[0] | (buf[1] << 8) | (buf[2] << 16);
 
@@ -49,8 +65,8 @@ uint8_t reduce(uint8_t *buf, uint8_t len)
 }
 
 /*
-    Sets up the board, registers the 'b' command,
-    then serves SimpleSerial commands forever.
+    Sets up the board, links the 'b' command to handle_barrett,
+    then waits for commands from the computer forever.
 */
 int main(void)
 {
@@ -59,7 +75,7 @@ int main(void)
     trigger_setup();
 
     simpleserial_init();
-    simpleserial_addcmd('b', 3, reduce);
+    simpleserial_addcmd('b', 3, handle_barrett);
 
     while (1)
         simpleserial_get();
