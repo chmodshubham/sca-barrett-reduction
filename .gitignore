@@ -2,5 +2,6 @@ objdir-*/
 simpleserial-barrett-*.*
 Makefile.platform
 .ipynb_checkpoints/
+.DS_Store
 # *.npz
 # tvla_*_traces.csv

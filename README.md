@@ -54,11 +54,20 @@ cd ~/chipwhisperer-setup/sca-barrett-reduction
 jupyter notebook tvla_barrett.ipynb
 ```
 
-Run all cells. A run takes about 5 minutes. The notebook explains each plot, and its "Saved files" section lists the files it writes and how to read them. [docs/barrett-instructions.md](docs/barrett-instructions.md) explains each board instruction.
+Run all cells. A run takes about 5 minutes. The notebook saves its plot images in `figures/random`. The notebook explains each plot, and its "Saved files" section lists the files it writes and how to read them. [docs/barrett-instructions.md](docs/barrett-instructions.md) explains each board instruction.
+
+`tvla_barrett_alternate.ipynb` runs the same test with fixed and random inputs alternating (fixed, random, fixed, ...) instead of in a random order. It saves only its plot images, in `figures/alternate`. The lines that save its traces are commented out in its Capture cell. Stop the Jupyter server above with Ctrl+C, or open a new terminal, then:
+
+```bash
+# Open the alternating-input TVLA notebook in the ChipWhisperer environment
+conda activate cw
+cd ~/chipwhisperer-setup/sca-barrett-reduction
+jupyter notebook tvla_barrett_alternate.ipynb
+```
 
 ## Configuration
 
-The TVLA settings, such as `FIXED_X`, `N_TRACES` and `SAMPLES`, are in the first code cell of `tvla_barrett.ipynb`, each with a comment. The firmware settings are:
+The TVLA settings, such as `FIXED_X`, `N_TRACES` and `SAMPLES`, are in the first code cell of each TVLA notebook, each with a comment. The firmware settings are:
 
 | Setting        | Where                                         | Default                                                                |
 | -------------- | --------------------------------------------- | ---------------------------------------------------------------------- |
@@ -68,8 +77,8 @@ The TVLA settings, such as `FIXED_X`, `N_TRACES` and `SAMPLES`, are in the first
 To change the modulus:
 
 1. In `simpleserial-barrett/simpleserial-barrett.c`, set `PARAM_N`, and set `PARAM_N_MU` to `floor(2^32 / PARAM_N)`.
-2. Set `N` to the same value in `simpleserial-barrett/flash_and_test.ipynb` and `tvla_barrett.ipynb`.
-3. Rebuild the firmware, then run both notebooks again:
+2. Set `N` to the same value in `simpleserial-barrett/flash_and_test.ipynb`, `tvla_barrett.ipynb` and `tvla_barrett_alternate.ipynb`.
+3. Rebuild the firmware, then run the notebooks again:
 
    ```bash
    # Build the firmware with the new modulus
