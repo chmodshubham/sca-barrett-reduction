@@ -7,7 +7,7 @@ Power side-channel analysis of single-word Barrett reduction, as used in [HQC](h
 Set up ChipWhisperer `v6.1.0` with the [chipwhisperer-setup](https://github.com/chmodshubham/chipwhisperer-setup) guide.
 
 ```bash
-# Install the packages the TVLA notebook needs
+# Install SciPy for the t-test and matplotlib for the plot images
 conda activate cw
 python -m pip install scipy matplotlib
 ```
@@ -60,10 +60,10 @@ Run all cells. A run takes about 5 minutes. The notebook explains each plot, and
 
 The TVLA settings, such as `FIXED_X`, `N_TRACES` and `SAMPLES`, are in the first code cell of `tvla_barrett.ipynb`, each with a comment. The firmware settings are:
 
-| Setting | Where | Default |
-| --- | --- | --- |
-| `PARAM_N` | `simpleserial-barrett/simpleserial-barrett.c` | `17669` (HQC-1) |
-| `FIRMWAREPATH` | `make FIRMWAREPATH=<path>` | `../../chipwhisperer/firmware/mcu`, relative to `simpleserial-barrett` |
+| Setting        | Where                                         | Default                                                                |
+| -------------- | --------------------------------------------- | ---------------------------------------------------------------------- |
+| `PARAM_N`      | `simpleserial-barrett/simpleserial-barrett.c` | `17669` (HQC-1)                                                        |
+| `FIRMWAREPATH` | `make FIRMWAREPATH=<path>`                    | `../../chipwhisperer/firmware/mcu`, relative to `simpleserial-barrett` |
 
 To change the modulus:
 
@@ -84,8 +84,8 @@ To change the modulus:
 cd ~/chipwhisperer-setup/sca-barrett-reduction/simpleserial-barrett
 make clean
 
-# Remove saved traces, plot images and Jupyter cache folders
+# Remove saved traces and Jupyter cache folders
 cd ~/chipwhisperer-setup/sca-barrett-reduction
 rm -f tvla_*_traces.npz tvla_*_traces.csv
-rm -rf figures .ipynb_checkpoints simpleserial-barrett/.ipynb_checkpoints
+rm -rf .ipynb_checkpoints simpleserial-barrett/.ipynb_checkpoints
 ```
